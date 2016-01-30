@@ -1,0 +1,48 @@
+---
+title: "Analysis of ToothGrowth data"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+* *Author - Sanjeev Kumar Maheve*
+* *Dated -  January 27, 2016*
+
+### Overview
+The report aims to analyze the ToothGrowth data in the R datasets package.
+
+```{r setoptions,echo=TRUE}
+library(knitr)
+# Setting the global options.
+opts_chunk$set(fig.width=6, fig.height=4, warning=FALSE)
+```
+
+### Load the ToothGrowth data and perform some basic exploratory data analyses.
+
+```{r}
+library(datasets)
+data(ToothGrowth)
+# Print the frame details
+str(ToothGrowth)
+
+unique(ToothGrowth$len); unique(ToothGrowth$dose)
+
+library(ggplot2)
+m <- ggplot(ToothGrowth, aes(x=factor(dose), y=len))
+m + geom_boxplot() + facet_grid(.~supp) + ggtitle("ToothGrowth data details")
+```
+
+### Provide a basic summary of the data.
+Included figures highlight the means we are comparing.
+```{r}
+summary(ToothGrowth)
+```
+
+### Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose.
+```{r}
+# TBD
+```
+
+### State your conclusions and the assumptions needed for your conclusions
+Based on the visual inspection of data from the box plot; there is a direct relationship between the size of the tooth and the dose required for the same.

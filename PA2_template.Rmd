@@ -1,0 +1,92 @@
+---
+title: "Statistical Inference - Data analysis using exponential distribution"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+* *Author - Sanjeev Kumar Maheve*
+* *Dated -  January 27, 2016*
+
+### Overview
+The report aims to investigate the exponential distribution in R and compare it with the Central Limit Theorem. The exponential distribution is simulated in R with rexp(n, lambda) where lambda is the rate parameter. For this study the lambda is chosen as 0.2 for all of the simulations. The purpose is to investigate the distribution of averages of 40 exponentials with 1000 simulations.
+
+```{r setoptions,echo=TRUE}
+library(knitr)
+# Setting the global options.
+opts_chunk$set(fig.width=6, fig.height=4, warning=FALSE)
+```
+
+### Simulations
+The mean and the standard deviation of exponential distribution is given by 1/lambda. The below simulation steps demonstrates theoretical and practical values for mean and variance for the sample data.
+
+```{r}
+# Set the number of runs for the simulation
+nosim <- 1000
+# Number of exponentials
+n <- 40
+# Set the given rate parameter
+lambda <- 0.2
+# When simulating any random numbers it is essential to set the random number seed. 
+# Setting the random number seed with set.seed() ensures reproducibility of the 
+# sequence of random numbers.
+set.seed(27092015)
+# Define a function to be applied per row of simulation matrix
+# and fill with exponential distribution data.
+mu_func <- function(x) {mean(rexp(n, lambda))}
+sample_data <- data.frame(
+    mu = apply(matrix(1:nosim, nosim), 1, mu_func)
+    )
+```
+
+### Sample Mean versus Theoretical Mean
+Included figures highlight the means we are comparing.
+```{r}
+# Sample mean
+mean(sample_data$mu)
+
+# Theoretical mean calculation
+1/lambda
+
+# Plot the histogram showing the distribution of means.
+library(datasets)
+library(ggplot2) 
+
+m <- ggplot(sample_data, aes(x=mu))
+m + geom_histogram(aes(y = ..density..)) + geom_density(colour="blue")
+```
+
+### Sample Variance versus Theoretical Variance
+Included figures highlight the variances we are comparing.
+```{r}
+# Sample variance
+var(sample_data$mu)
+
+# Theoretical variance calculation
+((1/lambda)/sqrt(n))^2
+```
+### Distribution is approximately normal.
+The figure below shows two density plots:  
+
+1. blue density plot of exponential distribution after 1000 simulations and  
+2. red density plot of ideal standard normal distribution.
+
+It's evident from the experiment, as the sample size increases the distribution tend to follow standard normal distribution for *iid* random variables.
+
+```{r}
+# Compare the distribution of 1000 averages of 40 exponential distribution.
+# (This is with reference to hints provided in project page.)
+mns=NULL
+for (i in 1 : 10000) mns = c(mns, mean(rexp(n, lambda)))
+
+new_data <- data.frame(mns, size=40)
+m <- ggplot(new_data, aes(x=mns))
+m + geom_histogram(aes(y = ..density..), col="cyan") + geom_density(col="blue") +
+    stat_function(fun=dnorm, arg=list(mean=1/lambda, sd=sd(mns)), col = "red") +
+    xlab("Averages of the exponential distribution") +
+    ggtitle("Distribution of 1000 averages of 40 exponential distribution")
+```
+
+### Concluding Remarks
+The arithmetic mean of a sufficiently large number of iterates of independent random variables, each with a well-defined expected value and well-defined variance, is approximately normally distributed, regardless of the underlying distribution. Hence proves Central Limit Theorem (CLT).
