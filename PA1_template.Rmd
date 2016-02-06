@@ -18,31 +18,86 @@ library(knitr)
 opts_chunk$set(fig.width=6, fig.height=4, warning=FALSE)
 ```
 
-### Load the ToothGrowth data and perform some basic exploratory data analyses.
+### Basic Exploratory Data Analyses of ToothGrowth Dataset
+The dataset has the following columns:
+
+[1] len	    numeric	Tooth length  
+[2]	supp	factor	Supplement type    
+[3]	dose	numeric	Dose in milligrams/day  
 
 ```{r}
 library(datasets)
 data(ToothGrowth)
-# Print the frame details
-str(ToothGrowth)
 
-unique(ToothGrowth$len); unique(ToothGrowth$dose)
+# Print few rows from the data frame
+head(ToothGrowth)
 
-library(ggplot2)
-m <- ggplot(ToothGrowth, aes(x=factor(dose), y=len))
-m + geom_boxplot() + facet_grid(.~supp) + ggtitle("ToothGrowth data details")
+# Lets check the outliers and general tooth length based on dosage.
+# One of the simple way to show the relationships between multiple 
+# variable is using multiple box-plots.
+
+# Lets use 2 crossed factors for grouping the dataset and colour 
+# for ease of interpretation.
+boxplot(len~supp*dose, data=ToothGrowth, 
+        notch=FALSE, 
+        col = (c("blue","red")),
+        main = "Tooth Growth Dataset", 
+        xlab = "Suppliment and Dose",
+        ylab = "Length")
+suppressMessages(library(dplyr))
+ToothGrowth %>% group_by(supp, dose) %>% summarise_each(funs(mean))
 ```
+#### Observations
+The boxplot shows that there are no outliers in the given dataset. The average tooth length for dosage from OJ supplier is higher w.r.t. VC supplier. Also, in general (irrespective of supplier) higher dose implies longer teeths for 0.5 and 1.0 dosages.
 
 ### Provide a basic summary of the data.
 Included figures highlight the means we are comparing.
 ```{r}
-summary(ToothGrowth)
+str(ToothGrowth)
+unique(ToothGrowth$supp)
+unique(ToothGrowth$dose)
 ```
 
 ### Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose.
+#### T-Test using ToothGrowth Dosage Measure
+Now let’s do a t-interval comparing doses. We’ll show the two intervals, one assuming that the variances are equal and one assuming otherwise.
 ```{r}
-# TBD
+# Split the dataset based on dose.
+TGDose0p5 <- subset(ToothGrowth, dose %in% c(0.5, 1.0))
+rbind(
+    t.test(len ~ dose, paired = FALSE, var.equal = TRUE, data = TGDose0p5)$conf,
+    t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = TGDose0p5)$conf 
+    )
+t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = TGDose0p5)
+TGDose1p0 <- subset(ToothGrowth, dose %in% c(1.0, 2.0))
+rbind(
+    t.test(len ~ dose, paired = FALSE, var.equal = TRUE, data = TGDose1p0)$conf,
+    t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = TGDose1p0)$conf 
+    )
+t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = TGDose1p0)
+TGDose2p0 <- subset(ToothGrowth, dose %in% c(2.0, 0.5))
+rbind(
+    t.test(len ~ dose, paired = FALSE, var.equal = TRUE, data = TGDose2p0)$conf,
+    t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = TGDose2p0)$conf 
+    )
+t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = TGDose2p0)
 ```
+#### T-Test using Supplement Type  
+```{r}
+rbind(
+    t.test(len ~ supp, paired = FALSE, var.equal = TRUE, data = ToothGrowth)$conf,
+    t.test(len ~ supp, paired = FALSE, var.equal = FALSE, data = ToothGrowth)$conf 
+    )
+t.test(len ~ supp, paired = FALSE, var.equal = FALSE, data = ToothGrowth)
+```
+If we repeatedly perform the experiment on independent samples, about 95% of the intervals that we obtain will contain the true mean differences that we are estimating. Refer the confidence interval results above.
 
-### State your conclusions and the assumptions needed for your conclusions
-Based on the visual inspection of data from the box plot; there is a direct relationship between the size of the tooth and the dose required for the same.
+### Conclusions and the Assumptions
+#### Assumption(s)
+1. The basic assumption is that the member of the sample population represents the true population. 
+
+#### Conclusion(s)
+* When conducted hypothesis testing over ToothGrowth dosage dataset, the P-values obtained are very small which suggests that null-hypothesis is incorrect and hence can be discarded - the central idea of a P-value is to assume that the null hypothesis is true.  
+* The measure of the dosage has direct impact on the length of tooth growth.  
+* For 0.5 and 1.0 mg/day dosages, the OJ supplement type has more effect on tooth growth than VC. At 2.0 mg/day dosage, both supplement type seem to function equally but ofcourse with different interval of length.
+* For T-Test on dosage, two intervals (i.e. one assuming that the variances are equal and one assuming otherwise) shows similar t-confidence intervals.
